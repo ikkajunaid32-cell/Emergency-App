@@ -18,23 +18,46 @@ class messageController extends GetxController {
   String? _currentAddress;
   Position? _currentPosition;
   void _sendSMS(String message, List<String> recipents) async {
-    for (var i = 0; i < recipents.length; i++) {
-      String _result = await BackgroundSms.sendMessage(
-              //add all phone numbers in phone number list
-              phoneNumber: recipents[i].toString(),
-              message: message)
-          .toString();
-      // Get.snackbar("SMS", _result);
+    if (recipents.isEmpty) {
+      Get.snackbar("SMS", "No emergency contacts found to send SMS");
+      return;
     }
-    Get.snackbar("SMS", "Distress SMS Sent Successfully");
 
-    print(recipents);
+    if (Platform.isAndroid) {
+      try {
+        for (var i = 0; i < recipents.length; i++) {
+          await BackgroundSms.sendMessage(
+            phoneNumber: recipents[i].toString(),
+            message: message,
+          );
+        }
+        Get.snackbar("SMS", "Distress SMS Sent Successfully");
+      } catch (e) {
+        debugPrint("Background SMS failed, falling back to SMS app: $e");
+        _launchSmsFallback(message, recipents);
+      }
+    } else {
+      // iOS or other platforms where silent background SMS is not allowed
+      _launchSmsFallback(message, recipents);
+    }
+  }
 
-    //     await sendSMS(message: message, recipients: recipents, sendDirect: true)
-    //         .catchError((onError) {
-    //   print("ERROR IN SENDING FUNCTION!!!" + onError.toString());
-    // });
-    // print(_result);
+  void _launchSmsFallback(String message, List<String> recipients) async {
+    final String separator = Platform.isIOS ? '&' : '?';
+    final String phoneNumbers = recipients.join(',');
+    final Uri smsUri = Uri.parse(
+      'sms:$phoneNumbers${separator}body=${Uri.encodeComponent(message)}',
+    );
+    try {
+      if (await canLaunchUrl(smsUri)) {
+        await launchUrl(smsUri);
+      } else {
+        Get.snackbar("SMS", "Could not open SMS application.");
+      }
+    } catch (e) {
+      debugPrint("Error launching SMS: $e");
+      Get.snackbar("SMS", "Failed to launch SMS app: $e");
+    }
   }
 
   Future<bool> handleLocationPermission() async {
@@ -63,14 +86,17 @@ class messageController extends GetxController {
   }
 
   handleSmsPermission() async {
-    final status = await Permission.sms.request();
-    if (status.isGranted) {
-      debugPrint("SMS Permission Granted");
-      return true;
-    } else {
-      debugPrint("SMS Permission Denied");
-      return false;
+    if (Platform.isAndroid) {
+      final status = await Permission.sms.request();
+      if (status.isGranted) {
+        debugPrint("SMS Permission Granted");
+        return true;
+      } else {
+        debugPrint("SMS Permission Denied");
+        return false;
+      }
     }
+    return true;
   }
 
   Future<Position> getCurrentPosition() async {
@@ -85,27 +111,32 @@ class messageController extends GetxController {
           timestamp: DateTime.now(),
           accuracy: 0,
           altitude: 0,
+          altitudeAccuracy: 0,
           heading: 0,
+          headingAccuracy: 0,
           speed: 0,
           speedAccuracy: 0);
     }
-    await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
-        .then((Position position) {
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
       _currentPosition = position;
-      _getAddressFromLatLng(_currentPosition!);
+      await _getAddressFromLatLng(_currentPosition!);
       return _currentPosition!;
-    }).catchError((e) {
-      debugPrint(e);
-    });
-    return Position(
-        latitude: 0,
-        longitude: 0,
-        timestamp: DateTime.now(),
-        accuracy: 0,
-        altitude: 0,
-        heading: 0,
-        speed: 0,
-        speedAccuracy: 0);
+    } catch (e) {
+      debugPrint(e.toString());
+      return Position(
+          latitude: 0,
+          longitude: 0,
+          timestamp: DateTime.now(),
+          accuracy: 0,
+          altitude: 0,
+          altitudeAccuracy: 0,
+          heading: 0,
+          headingAccuracy: 0,
+          speed: 0,
+          speedAccuracy: 0);
+    }
   }
 
   Future<void> _getAddressFromLatLng(Position position) async {

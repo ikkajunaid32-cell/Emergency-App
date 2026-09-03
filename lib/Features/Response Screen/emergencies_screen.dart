@@ -1,9 +1,8 @@
 import 'dart:io';
-
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_emergency_app/Common%20Widgets/constants.dart';
+import 'package:public_emergency_app/Database/database_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../ListOfResponders/select_responder.dart';
 import '../User/Screens/LiveStreaming/live_stream.dart';
@@ -15,9 +14,22 @@ class EmergenciesScreen extends StatefulWidget {
   State<EmergenciesScreen> createState() => _EmergenciesScreenState();
 }
 
-final ref = FirebaseDatabase.instance.ref().child('sos');
-
 class _EmergenciesScreenState extends State<EmergenciesScreen> {
+  final dbHelper = DatabaseHelper();
+  late Future<List<Map<String, dynamic>>> _emergenciesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshEmergencies();
+  }
+
+  void _refreshEmergencies() {
+    setState(() {
+      _emergenciesFuture = dbHelper.getEmergencies();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,75 +78,116 @@ class _EmergenciesScreenState extends State<EmergenciesScreen> {
           ),
         ),
       ),
-      body: Container(
-        padding: const EdgeInsets.only(top: 30),
-        child: StreamBuilder(
-          stream: ref.onValue,
-          builder:
-              (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
-            if (snapshot.hasData) {
-              DataSnapshot dataSnapshot = snapshot.data!.snapshot;
-              Map<dynamic, dynamic> map = dataSnapshot.value as dynamic ?? {};
-              List<dynamic> list = [];
-              list.clear();
-              list = map.values.toList();
+      body: RefreshIndicator(
+        onRefresh: () async {
+          _refreshEmergencies();
+        },
+        child: Container(
+          padding: const EdgeInsets.only(top: 20),
+          child: FutureBuilder<List<Map<String, dynamic>>>(
+            future: _emergenciesFuture,
+            builder: (BuildContext context,
+                AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline,
+                            color: Colors.red, size: 55),
+                        const SizedBox(height: 16),
+                        const Text(
+                          "Unable to load emergencies",
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "${snapshot.error}",
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              color: Colors.black54, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              final list = snapshot.data ?? [];
+
+              if (list.isEmpty) {
+                return Center(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: const [
+                      Icon(Icons.check_circle_outline,
+                          color: Colors.green, size: 55),
+                      SizedBox(height: 16),
+                      Text(
+                        "No Active Emergencies",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        "All clear! Stay safe.\nPull down to refresh.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                );
+              }
 
               return ListView.builder(
-                itemCount: snapshot.data!.snapshot.children.length,
+                itemCount: list.length,
                 itemBuilder: (context, index) {
+                  final item = list[index];
+
+                  final address =
+                      item['address']?.toString() ?? 'Unknown Location';
+                  final time = item['time']?.toString() ?? '';
+                  final latStr = item['lat']?.toString() ?? '0.0';
+                  final longStr = item['long']?.toString() ?? '0.0';
+                  final videoId = item['videoId']?.toString() ?? '';
+
                   return Container(
                     margin: EdgeInsets.symmetric(
                         vertical: Get.height * 0.015,
                         horizontal: Get.width * 0.018),
                     child: ListTile(
-                        // onTap: () async{
-                        //   var lat= list[index]['lat'];
-                        //   var long= list[index]['long'];
-                        //   String url = '';
-                        //   String urlAppleMaps = '';
-                        //   if (Platform.isAndroid) {
-                        //     url = 'http://www.google.com/maps/place/$lat,$long';
-                        //     if (await canLaunchUrl(Uri.parse(url))) {
-                        //       await launchUrl(Uri.parse(url));
-                        //     } else {
-                        //       throw 'Could not launch $url';
-                        //     }
-                        //   } else {
-                        //     urlAppleMaps = 'https://maps.apple.com/?q=$lat,$long';
-                        //     url = 'comgooglemaps://?saddr=&daddr=$lat,$long&directionsmode=driving';
-                        //     if (await canLaunchUrl(Uri.parse(url))) {
-                        //       await launchUrl(Uri.parse(url));
-                        //     } else if (await canLaunchUrl(Uri.parse(urlAppleMaps))) {
-                        //       await launchUrl(Uri.parse(urlAppleMaps));
-                        //     } else {
-                        //       throw 'Could not launch $url';
-                        //     }
-                        //   }
-                        // },
                         onTap: () {
-                          var lat = double.parse(list[index]['lat']);
-                          var long = double.parse(list[index]['long']);
-                          var address = list[index]['address'];
-                          var userId = list[index]['videoId'];
+                          var lat = double.tryParse(latStr) ?? 0.0;
+                          var long = double.tryParse(longStr) ?? 0.0;
                           Get.to(() => SelectResponder(
                               userLat: lat,
                               userLong: long,
                               userAddress: address,
-                              userID: userId));
+                              userID: videoId));
                         },
                         tileColor: Color(color),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15),
                         ),
                         title: Text(
-                          list[index]['address'],
+                          address,
                           style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
                               color: Colors.white),
                         ),
                         subtitle: Text(
-                          list[index]['time'],
+                          time,
                           style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
@@ -148,13 +201,11 @@ class _EmergenciesScreenState extends State<EmergenciesScreen> {
                               icon: const Icon(Icons.location_on,
                                   color: Colors.amberAccent, size: 25),
                               onPressed: () async {
-                                var lat = list[index]['lat'];
-                                var long = list[index]['long'];
                                 String url = '';
                                 String urlAppleMaps = '';
                                 if (Platform.isAndroid) {
                                   url =
-                                      'https://www.google.com/maps/search/?api=1&query=$lat,$long';
+                                      'https://www.google.com/maps/search/?api=1&query=$latStr,$longStr';
                                   if (await canLaunchUrl(Uri.parse(url))) {
                                     await launchUrl(Uri.parse(url));
                                   } else {
@@ -162,9 +213,9 @@ class _EmergenciesScreenState extends State<EmergenciesScreen> {
                                   }
                                 } else {
                                   urlAppleMaps =
-                                      'https://maps.apple.com/?q=$lat,$long';
+                                      'https://maps.apple.com/?q=$latStr,$longStr';
                                   url =
-                                      'comgooglemaps://?saddr=&daddr=$lat,$long&directionsmode=driving';
+                                      'comgooglemaps://?saddr=&daddr=$latStr,$longStr&directionsmode=driving';
                                   if (await canLaunchUrl(Uri.parse(url))) {
                                     await launchUrl(Uri.parse(url));
                                   } else if (await canLaunchUrl(
@@ -182,7 +233,7 @@ class _EmergenciesScreenState extends State<EmergenciesScreen> {
                               onPressed: () {
                                 Get.to(
                                   () => LiveStreamingPage(
-                                    liveId: list[index]['videoId'],
+                                    liveId: videoId,
                                     isHost: false,
                                   ),
                                 );
@@ -193,11 +244,8 @@ class _EmergenciesScreenState extends State<EmergenciesScreen> {
                   );
                 },
               );
-            }
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          },
+            },
+          ),
         ),
       ),
     );

@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_emergency_app/Features/User/Controllers/session_controller.dart';
@@ -35,31 +34,23 @@ class _UserProfileState extends State<UserProfile> {
 
                     borderRadius: BorderRadius.circular(32.0),
                   ),
-                  primary: Colors.red, // background
-                  onPrimary: Colors.white,
-                  // foreground
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
                 ),
-                  onPressed: () {
-                    // final user = auth.currentUser;
-                    FirebaseAuth auth = FirebaseAuth.instance;
-
-                    auth.signOut().then((value) {
-                      SessionController().userid = '';
-                      Get.offAll(() => const LoginScreen());
-                    });
+                  onPressed: () async {
+                    await SessionController().clearSession();
+                    Get.offAll(() => const LoginScreen());
                   },
                   child:const Text("Logout")),
               const SizedBox(height: 20,),
               ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    minimumSize: Size(200, 50),
+                    minimumSize: const Size(200, 50),
                     shape: RoundedRectangleBorder(
-
                       borderRadius: BorderRadius.circular(32.0),
                     ),
-                    primary: Colors.green, // background
-                    onPrimary: Colors.white,
-                    // foreground
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
                   ),
                   onPressed: () {
                       Get.to(() => add_contact());
@@ -68,14 +59,12 @@ class _UserProfileState extends State<UserProfile> {
               const SizedBox(height: 20,),
               ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    minimumSize: Size(200, 50),
+                    minimumSize: const Size(200, 50),
                     shape: RoundedRectangleBorder(
-
                       borderRadius: BorderRadius.circular(32.0),
                     ),
-                    primary: Colors.blue, // background
-                    onPrimary: Colors.white,
-                    // foreground
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
                   ),
                   onPressed: () {
 

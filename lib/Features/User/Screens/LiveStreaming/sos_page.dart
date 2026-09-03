@@ -1,5 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:public_emergency_app/Database/database_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -132,29 +131,33 @@ class _LiveStreamUserState extends State<LiveStreamUser> {
   }
 
   saveCurrentLocation() async {
-    //adding in try catch
+    try {
+      String videoId = sessionController.userid?.toString() ?? 'anonymous';
+      String userEmail = sessionController.email?.toString() ?? '';
 
-    //save Current location to database
-    String videoId = sessionController.userid.toString();
-    final user = FirebaseAuth.instance.currentUser;
-    final ref = FirebaseDatabase.instance.ref("sos/${user!.uid.toString()}");
-    await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
-        .then((position) async {
-      await placemarkFromCoordinates(position.latitude, position.longitude)
-          .then((List<Placemark> placemarks) {
-        Placemark place = placemarks[0];
-        String address =
-            '${place.street}, ${place.subLocality}, ${place.subAdministrativeArea}, ${place.postalCode}';
-        ref.set({
-          "time": "${DateTime.now().hour}:${DateTime.now().minute} ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}",
-          "address": address,
-          "email": user?.email.toString(),
-          "lat": position.latitude.toString(),
-          "long": position.longitude.toString(),
-          "videoId": user!.uid.toString(),
-        });
+      final position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      final placemarks = await placemarkFromCoordinates(
+          position.latitude, position.longitude);
+
+      Placemark place = placemarks[0];
+      String address =
+          '${place.street}, ${place.subLocality}, ${place.subAdministrativeArea}, ${place.postalCode}';
+
+      await DatabaseHelper().insertEmergency({
+        "videoId": videoId,
+        "address": address,
+        "email": userEmail,
+        "lat": position.latitude.toString(),
+        "long": position.longitude.toString(),
+        "time":
+            "${DateTime.now().hour}:${DateTime.now().minute} ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}",
+        "status": "active",
       });
-    });
+      debugPrint("Emergency saved to SQLite successfully");
+    } catch (e) {
+      debugPrint("Error saving emergency: $e");
+    }
   }
 
   jumpToLiveStream(String liveId, bool isHost) {

@@ -1,5 +1,3 @@
-import 'package:firebase_database/firebase_database.dart';
-
 class AppUser {
   late String name;
   late String email;
@@ -30,16 +28,22 @@ class AppUser {
     this.latitude,
     this.longitude,
   });
-  AppUser.fromSnapshot(DataSnapshot dataSnapshot) {
-    id = dataSnapshot.key!;
 
-    var data = dataSnapshot.value as Map?;
+  AppUser.fromMap(Map<String, dynamic> data) {
+    id = data["id"]?.toString() ?? '';
+    email = data["email"]?.toString() ?? '';
+    name = data["userName"]?.toString() ?? data["UserName"]?.toString() ?? '';
+    phone = data["phone"]?.toString() ?? data["Phone"]?.toString() ?? '';
+    userType = data["userType"]?.toString() ?? data["UserType"]?.toString() ?? 'User';
+  }
 
-    if (data != null) {
-      email = data["email"];
-      name = data["UserName"];
-      phone = data["Phone"];
-      userType = data["UserType"];
-    }
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'email': email,
+      'userName': name,
+      'phone': phone,
+      'userType': userType,
+    };
   }
 }

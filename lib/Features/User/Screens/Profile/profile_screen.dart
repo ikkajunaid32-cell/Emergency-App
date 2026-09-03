@@ -1,7 +1,6 @@
 
 
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_emergency_app/Features/User/Screens/Profile/profile_screen_form.dart';
@@ -27,12 +26,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         shape: const StadiumBorder(
             side: BorderSide(
                 color: Colors.white24, width: 4)),
-        onPressed: () { FirebaseAuth auth = FirebaseAuth.instance;
-
-        auth.signOut().then((value){
-          SessionController().userid = '';
+        onPressed: () async {
+          await SessionController().clearSession();
           Get.offAll(() => const LoginScreen());
-        });},
+        },
         child: const Icon(Icons.logout_outlined),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endTop,

@@ -1,18 +1,17 @@
 import 'dart:io';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:public_emergency_app/Common%20Widgets/constants.dart';
-import 'package:public_emergency_app/Features/User/Screens/LiveStreaming/sos_page.dart';
+import 'package:public_emergency_app/Database/database_helper.dart';
+import 'package:public_emergency_app/Features/User/Controllers/session_controller.dart';
 import 'package:public_emergency_app/Features/User/Screens/Profile/profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_switch/sliding_switch.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../User/Controllers/message_sending.dart';
 import '../User/Screens/LiveStreaming/live_stream.dart';
-import 'dart:math';
 
 class ResponderDashboard extends StatefulWidget {
   const ResponderDashboard({Key? key}) : super(key: key);
@@ -20,19 +19,7 @@ class ResponderDashboard extends StatefulWidget {
   State<ResponderDashboard> createState() => _ResponderDashboardState();
 }
 
-final user = FirebaseAuth.instance.currentUser;
-final assignmedRef =
-    FirebaseDatabase.instance.ref().child('assigned/${user!.uid}');
-final activeRespondersRef =
-    FirebaseDatabase.instance.ref().child('activeResponders');
-final userRef = FirebaseDatabase.instance.ref().child('Users');
-String userType = '';
-final locationController = Get.put(messageController());
-late Position position;
-String status = '';
-bool _switchValue = false;
-
-double calculateDistance(lat1, lon1, lat2, lon2) {
+double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
   var p = 0.017453292519943295;
   var a = 0.5 -
       cos((lat2 - lat1) * p) / 2 +
@@ -41,20 +28,34 @@ double calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 class _ResponderDashboardState extends State<ResponderDashboard> {
-  final user = FirebaseAuth.instance.currentUser;
-  // var Value = false;
+  final dbHelper = DatabaseHelper();
+  final sessionController = SessionController();
+  final locationController = Get.put(messageController());
+
+  String status = 'Unavailable';
+  bool _switchValue = false;
+  Position? currentPosition;
+
+  late Future<List<Map<String, dynamic>>> _emergenciesFuture;
 
   @override
   void initState() {
     super.initState();
     _loadSwitchValue();
-    debugPrint(_switchValue.toString());
+    _refreshEmergencies();
+  }
+
+  void _refreshEmergencies() {
+    setState(() {
+      _emergenciesFuture = dbHelper.getEmergencies();
+    });
   }
 
   Future<void> _loadSwitchValue() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _switchValue = prefs.getBool('switchValue') ?? false;
+      status = _switchValue ? 'Available' : 'Unavailable';
     });
   }
 
@@ -122,38 +123,27 @@ class _ResponderDashboardState extends State<ResponderDashboard> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Text(
-                      //   'Set your status: ${status}',
-                      //   style: TextStyle(
-                      //     fontSize: 15.0,
-                      //     backgroundColor: Colors.white,
-                      //     color: setColor(),
-                      //     fontWeight: FontWeight.bold,
-                      //   ),
-                      // ),
                       SlidingSwitch(
                         value: _switchValue,
-                        // initial value of the switch
-                        width: 100.0,
-                        // width of the switch
+                        width: 110.0,
                         onChanged: (value) {
                           setState(() {
-                            _saveSwitchValue(value);
                             _switchValue = value;
-                            status = getStatus();
+                            status = value ? 'Available' : 'Unavailable';
                           });
                           _saveSwitchValue(value);
-                          // Value = value;
+                          if (value) {
+                            setResponderData();
+                          } else {
+                            removeResponderData();
+                          }
                         },
                         height: 40.0,
-                        // borderRadius: 20.0,
                         textOff: 'OFF',
                         textOn: 'ON',
                         colorOn: Colors.green,
                         colorOff: Colors.red,
-                        onSwipe: () {
-                          debugPrint(_switchValue.toString());
-                        },
+                        onSwipe: () {},
                         onTap: () {},
                         onDoubleTap: () {},
                       ),
@@ -165,186 +155,163 @@ class _ResponderDashboardState extends State<ResponderDashboard> {
           ),
         ),
       ),
-      body: StreamBuilder(
-        stream: assignmedRef.onValue,
-        builder: (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
-      if (snapshot.hasData) {
-        DataSnapshot dataSnapshot = snapshot.data!.snapshot;
-        Map<dynamic, dynamic> list = dataSnapshot.value as dynamic ?? Map();
-        // List<dynamic> list = [];
-        // list.clear();
-        // list = map.values.toList();
-        return ListView.builder(
-          itemCount: 1,
-          itemBuilder: (context, index) {
+      body: RefreshIndicator(
+        onRefresh: () async {
+          _refreshEmergencies();
+        },
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _emergenciesFuture,
+          builder: (BuildContext context,
+              AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final emergencies = snapshot.data ?? [];
+
+            if (emergencies.isEmpty) {
+              return Center(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: const [
+                    Icon(Icons.check_circle_outline,
+                        color: Colors.green, size: 55),
+                    SizedBox(height: 16),
+                    Text(
+                      "No Emergency Requests Yet",
+                      textAlign: TextAlign.center,
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      "Pull down to refresh",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final latestEmergency = emergencies.first;
+            final userAddress = latestEmergency['address']?.toString() ??
+                'No Emergency Location';
+            final userLatStr = latestEmergency['lat']?.toString() ?? '';
+            final userLongStr = latestEmergency['long']?.toString() ?? '';
+            final videoId = latestEmergency['videoId']?.toString() ?? '';
+
+            double? uLat = double.tryParse(userLatStr);
+            double? uLong = double.tryParse(userLongStr);
+
+            String distanceText = '';
+            if (currentPosition != null && uLat != null && uLong != null) {
+              double dist = calculateDistance(
+                  uLat, uLong, currentPosition!.latitude, currentPosition!.longitude);
+              distanceText = 'Distance: ${dist.toStringAsFixed(2)} km';
+            }
+
             return Container(
-              margin:
-                  const EdgeInsets.symmetric(vertical: 40, horizontal: 10),
+              margin: const EdgeInsets.symmetric(vertical: 40, horizontal: 10),
               child: ListTile(
-                  onTap: () async {
-                    var lat = list['userLat'];
-                    var long = list['userLong'];
-                    String url = '';
-                    String urlAppleMaps = '';
-                    if (list['userLat'] == null ||
-                        list['userLong'] == null) {
-                      Get.snackbar('Error', 'No Emergency Location Found');
-                      return;
-                    } else {
-                      if (Platform.isAndroid) {
-                        url =
-                            'https://www.google.com/maps/search/?api=1&query=$lat,$long';
-                        if (await canLaunchUrl(Uri.parse(url))) {
-                          await launchUrl(Uri.parse(url));
-                        } else {
-                          throw 'Could not launch $url';
-                        }
-                      } else {
-                        urlAppleMaps =
-                            'https://maps.apple.com/?q=$lat,$long';
-                        url =
-                            'comgooglemaps://?saddr=&daddr=$lat,$long&directionsmode=driving';
-                        if (await canLaunchUrl(Uri.parse(url))) {
-                          await launchUrl(Uri.parse(url));
-                        } else if (await canLaunchUrl(
-                            Uri.parse(urlAppleMaps))) {
-                          await launchUrl(Uri.parse(urlAppleMaps));
-                        } else {
-                          throw 'Could not launch $url';
-                        }
-                      }
+                onTap: () async {
+                  if (uLat == null || uLong == null) {
+                    Get.snackbar('Error', 'No Emergency Location Found');
+                    return;
+                  }
+                  String url = '';
+                  String urlAppleMaps = '';
+                  if (Platform.isAndroid) {
+                    url =
+                        'https://www.google.com/maps/search/?api=1&query=$uLat,$uLong';
+                    if (await canLaunchUrl(Uri.parse(url))) {
+                      await launchUrl(Uri.parse(url));
                     }
+                  } else {
+                    urlAppleMaps = 'https://maps.apple.com/?q=$uLat,$uLong';
+                    if (await canLaunchUrl(Uri.parse(urlAppleMaps))) {
+                      await launchUrl(Uri.parse(urlAppleMaps));
+                    }
+                  }
+                },
+                tileColor: Color(color),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                title: Text(
+                  userAddress,
+                  style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white),
+                ),
+                subtitle: distanceText.isNotEmpty
+                    ? Text(
+                        distanceText,
+                        style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white),
+                      )
+                    : null,
+                trailing: IconButton(
+                  icon: const Icon(Icons.video_call,
+                      color: Colors.red, size: 30),
+                  onPressed: () {
+                    if (videoId.isEmpty) {
+                      Get.snackbar('Error', 'No Live Stream Available');
+                      return;
+                    }
+                    Get.to(
+                      () => LiveStreamingPage(
+                        liveId: videoId,
+                        isHost: false,
+                      ),
+                    );
                   },
-                  tileColor: Color(color),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  title: Text(
-                    list['userAddress'] ?? 'No Emergency Request Yet',
-                    style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white),
-                  ),
-                  // subtitle: Text(
-                  //   // list['userID'],
-                  //   'Distance: ${calculateDistance(
-                  //       double.parse(list['userLat'].toString()),
-                  //       double.parse(list['userLong'].toString()),
-                  //       double.parse(list['responderLat'].toString()),
-                  //       double.parse(list['responderLong'].toString())).toStringAsFixed(2)} km',
-                  //   style: const TextStyle(
-                  //       fontSize: 15,
-                  //       fontWeight: FontWeight.w700,
-                  //       color: Colors.white),
-                  // ),
-                  subtitle: Text(
-                    'Distance: ${list['userLat'] != null && list['userLong'] != null && list['responderLat'] != null && list['responderLong'] != null ? '${calculateDistance(double.tryParse(list['userLat'].toString()) ?? 0.0,
-                        // Use a default value of 0.0 if the parsing fails or the value is null
-                        double.tryParse(list['userLong'].toString()) ?? 0.0, double.tryParse(list['responderLat'].toString()) ?? 0.0, double.tryParse(list['responderLong'].toString()) ?? 0.0).toStringAsFixed(2)} km' : ''}',
-                    style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white),
-                  ),
-                  trailing: IconButton(
-                      icon: const Icon(Icons.video_call,
-                          color: Colors.red, size: 30),
-                      onPressed: () {
-                        if (list['userLat'] == null ||
-                            list['userLong'] == null) {
-                          Get.snackbar('Error', 'No Emergency Request Yet');
-                          return;
-                        } else {
-                          Get.to(
-                            () => LiveStreamingPage(
-                              liveId: list['userID'],
-                              isHost: false,
-                            ),
-                          );
-                        }
-                      })),
+                ),
+              ),
             );
           },
-        );
-      }
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-        },
+        ),
       ),
     );
   }
 
-  String getStatus() {
-    if (_switchValue == true) {
-      // setResponderData();
-      setState(() {
-        status = 'Available';
-        setResponderData();
-      });
-    } else {
-      setState(() {
-        status = 'Unavailable';
-        activeRespondersRef.child(user!.uid.toString()).remove();
-      });
-    }
-    return status;
-  }
-
-  Color setColor() {
-    if (Value == true) {
-      return Colors.green;
-    } else {
-      return Colors.red;
-    }
-  }
-
-  setResponderData() async {
-    userType = '';
-    await smsController.handleLocationPermission();
-    await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high)
-        .then((position) async {
-      try {
-        await userRef
-            .child(user!.uid.toString())
-            .get()
-            .then((DataSnapshot snapshot) {
-          if (snapshot.value != null) {
-            Map<dynamic, dynamic> map = snapshot.value as dynamic;
-            userType = map['UserType'];
-            activeRespondersRef.child(user!.uid.toString()).set({
-              "lat": position.latitude.toString(),
-              "long": position.longitude.toString(),
-              "responderType": userType,
-              "responderID": user!.uid.toString(),
-            });
-          } else {
-            userType = 'DK BRuh';
-          }
-        });
-      } catch (e) {
-        debugPrint(e.toString());
-      }
-    });
-  }
-
-  getUserType() async {
+  void setResponderData() async {
     try {
-      await userRef
-          .child(user!.uid.toString())
-          .get()
-          .then((DataSnapshot snapshot) {
-        if (snapshot.value != null) {
-          Map<dynamic, dynamic> map = snapshot.value as dynamic ?? {};
+      await locationController.handleLocationPermission();
+      Position pos = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      currentPosition = pos;
 
-          return map['UserType'];
-        } else {
-          return '';
-        }
+      String responderId = sessionController.userid ?? 'responder_1';
+      String responderType = sessionController.userType ?? 'Police';
+      String responderName = sessionController.userName ?? 'Responder';
+      String responderPhone = sessionController.phone ?? '';
+
+      await dbHelper.upsertResponder({
+        "id": responderId,
+        "name": responderName,
+        "phone": responderPhone,
+        "lat": pos.latitude.toString(),
+        "long": pos.longitude.toString(),
+        "responderType": responderType,
+        "status": "Available",
       });
+      debugPrint("Responder status saved to SQLite: Available");
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint("Error updating responder status: $e");
+    }
+  }
+
+  void removeResponderData() async {
+    try {
+      String responderId = sessionController.userid ?? 'responder_1';
+      await dbHelper.removeResponder(responderId);
+      debugPrint("Responder status removed from SQLite");
+    } catch (e) {
+      debugPrint("Error removing responder: $e");
     }
   }
 }

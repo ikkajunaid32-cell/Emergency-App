@@ -1,44 +1,50 @@
-import 'dart:io';
-
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_emergency_app/Common%20Widgets/constants.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'dart:math';
+import 'package:public_emergency_app/Database/database_helper.dart';
 import '../Response Screen/emergencies_screen.dart';
-import '../User/Screens/LiveStreaming/live_stream.dart';
 
 class SelectResponder extends StatefulWidget {
   final String userID;
   final double userLat;
   final double userLong;
   final String userAddress;
-  final  userPhone;
-   const SelectResponder({Key? key, required this.userID, required this.userLat, required this.userLong, required this.userAddress, this.userPhone}
-      ) : super(key: key);
+  final dynamic userPhone;
+
+  const SelectResponder({
+    Key? key,
+    required this.userID,
+    required this.userLat,
+    required this.userLong,
+    required this.userAddress,
+    this.userPhone,
+  }) : super(key: key);
 
   @override
   State<SelectResponder> createState() => _SelectResponderState();
 }
 
-double calculateDistance(lat1, lon1, lat2, lon2){
+double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
   var p = 0.017453292519943295;
-  var a = 0.5 - cos((lat2 - lat1) * p)/2 +
-      cos(lat1 * p) * cos(lat2 * p) *
-          (1 - cos((lon2 - lon1) * p))/2;
+  var a = 0.5 -
+      cos((lat2 - lat1) * p) / 2 +
+      cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2;
   return 12742 * asin(sqrt(a));
 }
 
 class _SelectResponderState extends State<SelectResponder> {
-  final ref = FirebaseDatabase.instance.ref().child('activeResponders');
+  final dbHelper = DatabaseHelper();
+  late Future<List<Map<String, dynamic>>> _respondersFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _respondersFuture = dbHelper.getActiveResponders();
+  }
 
   @override
   Widget build(BuildContext context) {
-    initState(){
-      super.initState();
-    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(color),
@@ -55,7 +61,7 @@ class _SelectResponderState extends State<SelectResponder> {
             padding: const EdgeInsets.only(bottom: 15),
             child: Row(
               children: [
-                const SizedBox(width: 30,),
+                const SizedBox(width: 30),
                 Center(
                   child: SizedBox.fromSize(
                     size: const Size(36, 36),
@@ -64,12 +70,14 @@ class _SelectResponderState extends State<SelectResponder> {
                         color: Color(color),
                         child: InkWell(
                           splashColor: Colors.white,
-                          onTap: () {  Get.back();
+                          onTap: () {
+                            Get.back();
                           },
-                          child: Column(
+                          child: const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
-                            children: const <Widget>[
-                              Icon(Icons.arrow_back, color: Colors.white, size: 30,),
+                            children: <Widget>[
+                              Icon(Icons.arrow_back,
+                                  color: Colors.white, size: 30),
                             ],
                           ),
                         ),
@@ -77,8 +85,7 @@ class _SelectResponderState extends State<SelectResponder> {
                     ),
                   ),
                 ),
-
-                const SizedBox(width: 30,),
+                const SizedBox(width: 30),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -88,9 +95,9 @@ class _SelectResponderState extends State<SelectResponder> {
                         height: Get.height * 0.08),
                     Container(
                       margin: const EdgeInsets.only(top: 8),
-                      child: Column(
+                      child: const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           Text(
                             "Select Responders",
                             style: TextStyle(
@@ -101,7 +108,6 @@ class _SelectResponderState extends State<SelectResponder> {
                         ],
                       ),
                     )
-
                   ],
                 ),
               ],
@@ -109,102 +115,87 @@ class _SelectResponderState extends State<SelectResponder> {
           ),
         ),
       ),
-      body: StreamBuilder(
-        stream: ref.onValue,
-        builder: (BuildContext context, AsyncSnapshot<DatabaseEvent> snapshot) {
-          if (snapshot.hasData) {
-            DataSnapshot dataSnapshot = snapshot.data!.snapshot;
-            Map<dynamic, dynamic> map = dataSnapshot.value as dynamic ?? {};
-            List<dynamic> list = [];
-            list.clear();
-            list = map.values.toList();
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _respondersFuture,
+        builder: (BuildContext context,
+            AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            return ListView.builder(
-              itemCount: snapshot.data!.snapshot.children.length,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin:
-                  const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                  child: ListTile(
-                    // onTap: () async{
-                    //   var lat= list[index]['lat'];
-                    //   var long= list[index]['long'];
-                    //   String url = '';
-                    //   String urlAppleMaps = '';
-                    //   if (Platform.isAndroid) {
-                    //     url = 'http://www.google.com/maps/place/$lat,$long';
-                    //     if (await canLaunchUrl(Uri.parse(url))) {
-                    //       await launchUrl(Uri.parse(url));
-                    //     } else {
-                    //       throw 'Could not launch $url';
-                    //     }
-                    //   } else {
-                    //     urlAppleMaps = 'https://maps.apple.com/?q=$lat,$long';
-                    //     url = 'comgooglemaps://?saddr=&daddr=$lat,$long&directionsmode=driving';
-                    //     if (await canLaunchUrl(Uri.parse(url))) {
-                    //       await launchUrl(Uri.parse(url));
-                    //     } else if (await canLaunchUrl(Uri.parse(urlAppleMaps))) {
-                    //       await launchUrl(Uri.parse(urlAppleMaps));
-                    //     } else {
-                    //       throw 'Could not launch $url';
-                    //     }
-                    //   }
-                    // },
-                      onTap: () {
-                        var lat = double.parse(list[index]['lat']);
-                        var long = double.parse(list[index]['long']);
-                        var address = list[index]['address'];
-                        var userId = list[index]['videoId'];
-                      },
-                      tileColor: Color(color),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      title:  Text(
-                        list[index]['responderType'],
-                        // "Responder Type",
-                        style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white),
-                      ),
-                      subtitle: Text(
-                        "Distance from this user : ${calculateDistance(widget.userLat, widget.userLong, double.parse(list[index]['lat']),double.parse(list[index]['long'])).toStringAsFixed(2)} km",
-                        // list[index]['long'],
-                        // "Distance from this user : 0 km",
-                        style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white),
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.assignment_turned_in_outlined,
-                            color: Colors.red, size: 30),
-                        onPressed: () {
-                        //save the user data in active responders data storage
-                          final usersRef= FirebaseDatabase.instance.ref().child('assigned');
-                          usersRef.child(list[index]['responderID']).set({
-                            'responderLat': list[index]['lat'],
-                            'responderLong': list[index]['long'],
-                            'responderID': list[index]['responderID'],
-                            'userID': widget.userID,
-                            'userLat': widget.userLat,
-                            'userLong': widget.userLong,
-                            'userAddress': widget.userAddress,
-                            'userPhone': widget.userPhone,
-                          }).whenComplete(() {
-                             FirebaseDatabase.instance.ref().child('sos').child(widget.userID).remove();
-                          });
-                          Get.snackbar("Assigned", 'This Emergency has been assigned to the responder');
-                          Get.off(()=>const EmergenciesScreen());
-                        },
-                      )),
-                );
-              },
+          final list = snapshot.data ?? [];
+
+          if (list.isEmpty) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.info_outline, color: Colors.grey, size: 55),
+                  SizedBox(height: 16),
+                  Text(
+                    "No Active Responders Available",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    "Responders must turn their status ON to appear here.",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
             );
           }
-          return const Center(
-            child: CircularProgressIndicator(),
+
+          return ListView.builder(
+            itemCount: list.length,
+            itemBuilder: (context, index) {
+              final responder = list[index];
+              final responderType =
+                  responder['responderType']?.toString() ?? 'Responder';
+              final responderName =
+                  responder['name']?.toString() ?? responderType;
+              final lat =
+                  double.tryParse(responder['lat']?.toString() ?? '') ?? 0.0;
+              final long =
+                  double.tryParse(responder['long']?.toString() ?? '') ?? 0.0;
+
+              double dist = calculateDistance(
+                  widget.userLat, widget.userLong, lat, long);
+
+              return Container(
+                margin:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                child: ListTile(
+                  tileColor: Color(color),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  title: Text(
+                    "$responderName ($responderType)",
+                    style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white),
+                  ),
+                  subtitle: Text(
+                    "Distance from user: ${dist.toStringAsFixed(2)} km",
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white),
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.assignment_turned_in_outlined,
+                        color: Colors.greenAccent, size: 30),
+                    onPressed: () {
+                      Get.snackbar("Assigned",
+                          'This Emergency has been assigned to $responderName');
+                      Get.off(() => const EmergenciesScreen());
+                    },
+                  ),
+                ),
+              );
+            },
           );
         },
       ),

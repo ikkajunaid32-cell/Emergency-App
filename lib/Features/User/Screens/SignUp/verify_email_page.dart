@@ -1,10 +1,6 @@
-import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../User.dart';
-import '../../../Login/login_screen.dart';
+import 'package:public_emergency_app/Common%20Widgets/constants.dart';
 import '../../../Responder/responder_dashboard.dart';
 import '../../controllers/session_controller.dart';
 import '../bottom_nav.dart';
@@ -15,189 +11,70 @@ class VerifyEmailPage extends StatefulWidget {
   @override
   State<VerifyEmailPage> createState() => _VerifyEmailPageState();
 }
+
 class _VerifyEmailPageState extends State<VerifyEmailPage> {
-  bool isEmailVerified = false;
-  Timer? timer;
-  String userType = "";
-  bool canResendEmail = true;
-  Widget Screen = const NavBar();
-  Future<String> getUserType() async {
-    var firebaseUser = FirebaseAuth.instance.currentUser;
-    var ref =
-        FirebaseDatabase.instance.ref().child('Users').child(firebaseUser!.uid);
-    final snapshot = await ref.get(); // you should use await on async methods
-    if (snapshot!.value != null) {
-      var userCurrentInfo = AppUser.fromSnapshot(snapshot);
-      setState(() {
-        userType = userCurrentInfo.userType;
-        debugPrint("User Type: $userType");
-      });
-      return userCurrentInfo.userType;
-    } else {
-      return "Error";
-    }
-  }
-
-  screenAccordingToUser() async {
-    await getUserType().then((value) {
-      if (userType == "Police") {
-        setState(() {
-          Screen = const ResponderDashboard();
-        });
-        return const ResponderDashboard();
-      } else if (userType == "FireFighter") {
-        setState(() {
-          Screen = const ResponderDashboard();
-        });
-        return const ResponderDashboard();
-      } else if (userType == "Ambulance") {
-        setState(() {
-          Screen = const ResponderDashboard();
-        });
-        return const ResponderDashboard();
-      } else {
-        setState(() {
-          Screen = const NavBar();
-        });
-        return const NavBar();
-      }
-    });
-    return const NavBar();
-  }
-
   @override
   void initState() {
     super.initState();
-    isEmailVerified = FirebaseAuth.instance.currentUser!.emailVerified;
-    screenAccordingToUser();
-    if (!isEmailVerified) {
-      sendVerificationEmail();
-      timer = Timer.periodic(
-        const Duration(seconds: 3),
-        (_) => checkEmailVerified(),
-      );
-    }
+    _navigateToDashboard();
   }
 
-  @override
-  void dispose() {
-    timer?.cancel();
-
-    super.dispose();
-  }
-
-  Future checkEmailVerified() async {
-    await FirebaseAuth.instance.currentUser!.reload();
-    setState(() {
-      isEmailVerified = FirebaseAuth.instance.currentUser!.emailVerified;
+  void _navigateToDashboard() {
+    final userType = SessionController().userType;
+    Future.delayed(const Duration(seconds: 1), () {
+      if (userType == "Police" ||
+          userType == "FireFighter" ||
+          userType == "Ambulance") {
+        Get.offAll(() => const ResponderDashboard());
+      } else {
+        Get.offAll(() => const NavBar());
+      }
     });
-    if (isEmailVerified) {
-      timer?.cancel();
-    }
-  }
-
-  Future sendVerificationEmail() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser!;
-      await user.sendEmailVerification();
-
-      setState(() => canResendEmail = false);
-      await Future.delayed(const Duration(seconds: 5));
-      setState(() => canResendEmail = true);
-    } catch (e) {
-      Get.snackbar("Error", e.toString());
-    }
   }
 
   @override
-  Widget build(BuildContext context) => isEmailVerified
-      ? Screen
-      : Scaffold(
-          appBar: AppBar(
-            backgroundColor: Colors.lightBlueAccent,
-            centerTitle: true,
-            automaticallyImplyLeading: false,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(
-                bottom: Radius.circular(40),
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(color),
+        title: const Text("Verification"),
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.verified_user, color: Colors.green, size: 70),
+              const SizedBox(height: 20),
+              const Text(
+                "Welcome to Emergency App!",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
               ),
-            ),
-            bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(110.0),
-                child: Container(
-                  padding: const EdgeInsets.only(bottom: 15),
-                  child: Column(
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.only(top: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              "Verify Email",
-                              style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                )),
+              const SizedBox(height: 10),
+              const Text(
+                "Your account has been registered successfully.",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 30),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(color),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  minimumSize: const Size(200, 50),
+                ),
+                onPressed: _navigateToDashboard,
+                child: const Text("Continue to Dashboard",
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
+              ),
+            ],
           ),
-          body: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'A Verification email has been sent to your email.',
-                  style: TextStyle(fontSize: 20),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(
-                  height: 24,
-                ),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.lightBlueAccent,
-                      minimumSize: const Size.fromHeight(50),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20))),
-                  icon: const Icon(
-                    Icons.email,
-                    size: 32,
-                  ),
-                  label: const Text(
-                    'Resend Email',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onPressed: canResendEmail ? sendVerificationEmail : null,
-                ),
-                TextButton(
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(20),
-                  ),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(
-                        color: Colors.lightBlueAccent,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  onPressed: () {
-                    FirebaseAuth auth = FirebaseAuth.instance;
-                    auth.signOut().then((value) {
-                      SessionController().userid = '';
-                      Get.offAll(() => const LoginScreen());
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
+        ),
+      ),
+    );
+  }
 }

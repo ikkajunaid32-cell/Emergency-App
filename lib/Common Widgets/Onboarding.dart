@@ -1,14 +1,14 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_emergency_app/Common%20Widgets/constants.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../Features/Login/login_screen.dart';
+import '../Features/Responder/responder_dashboard.dart';
 import '../Features/User/Controllers/session_controller.dart';
-import '../Features/User/Screens/SignUp/verify_email_page.dart';
+import '../Features/User/Screens/bottom_nav.dart';
 
 class OnBoardingScreen extends StatefulWidget {
   const OnBoardingScreen({Key? key}) : super(key: key);
@@ -18,7 +18,6 @@ class OnBoardingScreen extends StatefulWidget {
 }
 
 class _OnBoardingScreenState extends State<OnBoardingScreen> {
-  FirebaseAuth auth = FirebaseAuth.instance;
   final controller = PageController();
   bool lastPage = false;
 
@@ -118,16 +117,17 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
       bottomSheet: lastPage
           ? GestureDetector(
               onTap: () {
-                final user = auth.currentUser;
-                // Firebase.initializeApp().then((value) => Get.put(AuthenticationRepository()));
-                if (user != null) {
-                  SessionController().userid = user.uid.toString();
-                  Timer(const Duration(milliseconds: 1),
-                      () => Get.offAll(() => const VerifyEmailPage()));
+                if (SessionController().userid != null) {
+                  final userType = SessionController().userType;
+                  if (userType == "Police" ||
+                      userType == "FireFighter" ||
+                      userType == "Ambulance") {
+                    Get.offAll(() => const ResponderDashboard());
+                  } else {
+                    Get.offAll(() => const NavBar());
+                  }
                 } else {
-                  // print("hello");
-                  Timer(const Duration(milliseconds: 1),
-                      () => Get.offAll(() => const LoginScreen()));
+                  Get.offAll(() => const LoginScreen());
                 }
               },
               child: Padding(
@@ -155,22 +155,18 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                       bottom: Get.height * .02, left: Get.width * .01),
                   child: TextButton(
                       onPressed: () {
-                        final user = auth.currentUser;
-                        // Firebase.initializeApp().then((value) => Get.put(AuthenticationRepository()));
-                        if (user != null) {
-                          SessionController().userid = user.uid.toString();
-                          Timer(const Duration(milliseconds: 1),
-                              () => Get.offAll(() => const VerifyEmailPage()));
+                        if (SessionController().userid != null) {
+                          final userType = SessionController().userType;
+                          if (userType == "Police" ||
+                              userType == "FireFighter" ||
+                              userType == "Ambulance") {
+                            Get.offAll(() => const ResponderDashboard());
+                          } else {
+                            Get.offAll(() => const NavBar());
+                          }
                         } else {
-                          // print("hello");
-                          Timer(const Duration(milliseconds: 1),
-                              () => Get.offAll(() => const LoginScreen()));
+                          Get.offAll(() => const LoginScreen());
                         }
-
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(builder: (context) =>  const LoginScreen()),
-                        // );
                       },
                       child: Text(
                         'Skip',
