@@ -65,6 +65,7 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
 	<!-- Emergency App Permissions -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app requires your location to send emergency responders to your exact coordinates.</string>
