@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:public_emergency_app/Utils/phone_validator.dart';
 
 import '../../../../Common Widgets/constants.dart';
 import '../../Controllers/signup_controller.dart';
@@ -87,18 +87,13 @@ class _SignUpFormWidgetState extends State<SignUpFormWidget> {
             const SizedBox(height: 30 - 20),
             TextFormField(
               controller: controller.phoneNo,
-              validator: (value) {
-                bool _isEmailValid =
-                RegExp(r'^(?:[+0][1-9])?[0-9]{8,15}$').hasMatch(value!);
-                if (!_isEmailValid) {
-                  return 'Invalid phone number';
-                }
-                return null;
-              },
+              keyboardType: TextInputType.phone,
+              validator: (value) => PhoneValidator.validate(value),
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.phone),
+                prefixIcon: const Icon(Icons.phone),
                 labelText: "Phone Number",
-                hintText: "Phone Number",
+                hintText: "e.g. 0412 345 678 or +61...",
+                helperText: "Supports Australian, Pakistani & International numbers",
                 border:
                 OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
               ),

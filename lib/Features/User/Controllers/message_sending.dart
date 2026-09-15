@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:public_emergency_app/Utils/phone_validator.dart';
 import '../../Emergency Contacts/emergency_contacts_controller.dart';
 
 class messageController extends GetxController {
@@ -18,27 +19,32 @@ class messageController extends GetxController {
   String? _currentAddress;
   Position? _currentPosition;
   void _sendSMS(String message, List<String> recipents) async {
-    if (recipents.isEmpty) {
+    final cleanRecipients = recipents
+        .map((p) => PhoneValidator.normalize(p))
+        .where((p) => p.isNotEmpty)
+        .toList();
+
+    if (cleanRecipients.isEmpty) {
       Get.snackbar("SMS", "No emergency contacts found to send SMS");
       return;
     }
 
     if (Platform.isAndroid) {
       try {
-        for (var i = 0; i < recipents.length; i++) {
+        for (var i = 0; i < cleanRecipients.length; i++) {
           await BackgroundSms.sendMessage(
-            phoneNumber: recipents[i].toString(),
+            phoneNumber: cleanRecipients[i],
             message: message,
           );
         }
         Get.snackbar("SMS", "Distress SMS Sent Successfully");
       } catch (e) {
         debugPrint("Background SMS failed, falling back to SMS app: $e");
-        _launchSmsFallback(message, recipents);
+        _launchSmsFallback(message, cleanRecipients);
       }
     } else {
       // iOS or other platforms where silent background SMS is not allowed
-      _launchSmsFallback(message, recipents);
+      _launchSmsFallback(message, cleanRecipients);
     }
   }
 

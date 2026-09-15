@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:public_emergency_app/Common%20Widgets/constants.dart';
 import 'package:public_emergency_app/Database/database_helper.dart';
+import 'package:public_emergency_app/Utils/phone_validator.dart';
 import '../../../Emergency Contacts/add_contacts.dart';
 import '../../Controllers/session_controller.dart';
 
@@ -98,16 +99,13 @@ class _ProfileFormWidgetState extends State<ProfileFormWidget> {
                 const SizedBox(height: 15),
                 TextFormField(
                   controller: phoneController,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'This field is required';
-                    }
-                    return null;
-                  },
+                  keyboardType: TextInputType.phone,
+                  validator: (value) => PhoneValidator.validate(value),
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.phone),
                     labelText: "Phone Number",
-                    hintText: "Phone Number",
+                    hintText: "e.g. 0412 345 678 or +61...",
+                    helperText: "Supports Australian & International formats",
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20)),
                   ),

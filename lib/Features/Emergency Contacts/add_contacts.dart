@@ -1,294 +1,346 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:public_emergency_app/Common%20Widgets/constants.dart';
-import 'package:public_emergency_app/Features/User/Screens/Profile/profile_screen.dart';
-import 'package:public_emergency_app/Features/User/Screens/bottom_nav.dart';
+import 'package:public_emergency_app/Utils/emergency_country_config.dart';
+import 'package:public_emergency_app/Utils/phone_validator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'emergency_contacts_controller.dart';
 
 class add_contact extends StatefulWidget {
   const add_contact({Key? key}) : super(key: key);
 
   @override
-  State<add_contact> createState() => _add_contactState();
+  State<add_contact> createState() => _AddContactState();
 }
 
-class _add_contactState extends State<add_contact> {
+class _AddContactState extends State<add_contact> {
+  final contactController = Get.put(EmergencyContactsController());
+  final countryConfig = EmergencyCountryConfig.instance;
+  final _formKey = GlobalKey<FormState>();
+
+  final contact1controller = TextEditingController();
+  final contact2controller = TextEditingController();
+  final contact3controller = TextEditingController();
+  final contact4controller = TextEditingController();
+  final contact5controller = TextEditingController();
+
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    contactController.loadData();
     _loadContacts();
   }
 
   Future<void> _loadContacts() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _contact1 = prefs.getString('contact1')!;
-      _contact2 = prefs.getString('contact2')!;
-      _contact3 = prefs.getString('contact3')!;
-      _contact4 = prefs.getString('contact4')!;
-      _contact5 = prefs.getString('contact5')!;
+      contact1controller.text = prefs.getString('contact1') ?? '';
+      contact2controller.text = prefs.getString('contact2') ?? '';
+      contact3controller.text = prefs.getString('contact3') ?? '';
+      contact4controller.text = prefs.getString('contact4') ?? '';
+      contact5controller.text = prefs.getString('contact5') ?? '';
+      _isLoading = false;
     });
   }
 
-  //Emergency Contacts
-  static String _contact1 = '';
-  static   String _contact2 = '';
-  static   String _contact3 = '';
-  static   String _contact4 = '';
-  static   String _contact5 = '';
+  Future<void> _saveContacts() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('contact1', PhoneValidator.normalize(contact1controller.text.trim()));
+    await prefs.setString('contact2', PhoneValidator.normalize(contact2controller.text.trim()));
+    await prefs.setString('contact3', PhoneValidator.normalize(contact3controller.text.trim()));
+    await prefs.setString('contact4', PhoneValidator.normalize(contact4controller.text.trim()));
+    await prefs.setString('contact5', PhoneValidator.normalize(contact5controller.text.trim()));
 
-  //Controllers
-  final contactController = Get.put(EmergencyContactsController());
-  var _formKey = GlobalKey<FormState>();
-  var contact1controller = TextEditingController(text: Text(_contact1).data.toString());
-  var contact2controller = TextEditingController(text: Text(_contact2).data.toString());
-  var contact3controller = TextEditingController(text: Text(_contact3).data.toString());
-  var contact4controller = TextEditingController(text: Text(_contact4).data.toString());
-  var contact5controller = TextEditingController(text: Text(_contact5).data.toString());
+    await contactController.loadData();
 
-  static const String _key1 = 'contact1';
-  static const String _key2 = 'contact2';
-  static const String _key3 = 'contact3';
-  static const String _key4 = 'contact4';
-  static const String _key5 = 'contact5';
+    Get.snackbar(
+      "Saved Successfully",
+      "Emergency contacts updated for instant distress alerts",
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green.shade700,
+      colorText: Colors.white,
+      margin: const EdgeInsets.all(16),
+      borderRadius: 16,
+      duration: const Duration(seconds: 2),
+    );
+  }
 
+  @override
+  void dispose() {
+    contact1controller.dispose();
+    contact2controller.dispose();
+    contact3controller.dispose();
+    contact4controller.dispose();
+    contact5controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Color(color),
+        backgroundColor: AppColors.primary,
+        elevation: 0,
         centerTitle: true,
-        automaticallyImplyLeading: false,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(40),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          onPressed: () => Get.back(),
+        ),
+        title: Text(
+          "Emergency Contacts",
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            color: Colors.white,
           ),
         ),
-        bottom: PreferredSize(
-            preferredSize: Size.fromHeight(Get.height * 0.1),
-            child: Container(
-              padding: const EdgeInsets.only(bottom: 15),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: SizedBox.fromSize(
-                          size: const Size(56, 56),
-                          child: ClipOval(
-                            child: Material(
-                              color: Color(color),
-                              child: InkWell(
-                                splashColor: Colors.white,
-                                onTap: () {  Get.to(() => NavBar());
-                                },
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const <Widget>[
-                                    Icon(Icons.arrow_back, color: Colors.white, size: 30,),
-                                  ],
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+        ),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Info banner
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.blue.shade100),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline_rounded, color: Colors.blue.shade700, size: 28),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Distress SMS Recipients",
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    color: Colors.blue.shade900,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "When you trigger SOS, an immediate SMS with your live GPS location link will be sent to these contacts.",
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: Colors.blue.shade800,
+                                    height: 1.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Country format hint
+                    Obx(() {
+                      final c = countryConfig.currentCountry.value;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(c.flag, style: const TextStyle(fontSize: 20)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                "Supported format: ${c.placeholder} or any international number",
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: AppColors.textMuted,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
+                          ],
+                        ),
+                      );
+                    }),
+
+                    const SizedBox(height: 20),
+
+                    _buildContactCard(
+                      index: 1,
+                      label: "Primary Emergency Contact *",
+                      controller: contact1controller,
+                      isPrimary: true,
+                    ),
+                    const SizedBox(height: 14),
+                    _buildContactCard(
+                      index: 2,
+                      label: "Emergency Contact 2",
+                      controller: contact2controller,
+                    ),
+                    const SizedBox(height: 14),
+                    _buildContactCard(
+                      index: 3,
+                      label: "Emergency Contact 3",
+                      controller: contact3controller,
+                    ),
+                    const SizedBox(height: 14),
+                    _buildContactCard(
+                      index: 4,
+                      label: "Emergency Contact 4",
+                      controller: contact4controller,
+                    ),
+                    const SizedBox(height: 14),
+                    _buildContactCard(
+                      index: 5,
+                      label: "Emergency Contact 5",
+                      controller: contact5controller,
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // Save Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          elevation: 3,
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            _saveContacts();
+                          }
+                        },
+                        child: Text(
+                          "SAVE CONTACTS",
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ),
-                      SizedBox(
-                        width: Get.width * 0.25,
-                      ) ,
-                      Image(
-                          image: const AssetImage(
-                              "assets/logos/emergencyAppLogo.png"),
-                          height: Get.height * 0.08),
-                    ],
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(top: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          "Emergency Contacts",
-                          style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white),
-                        ),
-                      ],
                     ),
-                  )
-                ],
-              ),
-            )),
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-               Text(
-                "Add Emergency Contacts here",
-                style: TextStyle(
-                    fontSize: 20,
-                    color: Color(color),
-                    fontWeight: FontWeight.bold),
-              ),
-              SizedBox(
-                height: Get.height * 0.04,
-              ),
-              SizedBox(
-                width: 300,
-                height: 100,
-                child: TextFormField(
-                  controller: contact1controller,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(15.0),
-                      ),
-                    ),
-                    hintText: 'Enter First Contact',
-                    labelText: 'Emergency Contact 1',
-                  ),
+                    const SizedBox(height: 30),
+                  ],
                 ),
               ),
-              SizedBox(
-                width: 300,
-                height: 100,
-                child: TextFormField(
-                  controller: contact2controller,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(15.0),
-                      ),
-                    ),
-                    hintText: 'Enter Second Contact',
-                    labelText: 'Emergency Contact 2',
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 300,
-                height: 100,
-                child: TextFormField(
-                  controller: contact3controller,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(15.0),
-                      ),
-                    ),
-                    hintText: 'Enter Second Contact',
-                    labelText: 'Emergency Contact 3',
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 300,
-                height: 100,
-                child: TextFormField(
-                  controller: contact4controller,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(15.0),
-                      ),
-                    ),
-                    hintText: 'Enter Second Contact',
-                    labelText: 'Emergency Contact 4',
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 300,
-                height: 100,
-                child: TextFormField(
-                  controller: contact5controller,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(15.0),
-                      ),
-                    ),
-                    hintText: 'Enter Second Contact',
-                    labelText: 'Emergency Contact 5',
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              Center(
-                child: SizedBox(
-                  height: 50,
-                  width: 200,
-                  child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0),
-                        ),
-                        backgroundColor: Color(color)
-                        // foreground
-                      ),
-                      child: const Text("Save"),
-                      onPressed: () async {
-                        var contact1 = contact1controller.text.toString();
-                        var contact2 = contact2controller.text.toString();
-                        var contact3 = contact3controller.text.toString();
-                        var contact4 = contact4controller.text.toString();
-                        var contact5 = contact5controller.text.toString();
-
-                        contactController.setData(contact1, contact2, contact3, contact4, contact5);
-                        contactController.loadData();
-
-                        //toast using Getx
-                        Get.snackbar(
-                          'Saved', 'Contact Saved Successfully',
-                          snackPosition: SnackPosition.BOTTOM,
-                          backgroundColor: Colors.green,
-                          colorText: Colors.white,
-                          duration: const Duration(seconds: 2),
-                          isDismissible: true,
-                          // dismissDirection: SnackDismissDirection.HORIZONTAL,
-                          forwardAnimationCurve: Curves.easeOutBack,
-                          reverseAnimationCurve: Curves.easeInBack,
-                        );
-                      }),
-                ),
-              ),
-              // Text(contact1),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 
-  // void loadData() async {
-  //   var contact1 = '';
-  //   var contact2 = '';
-  //   var contact3 = '';
-  //   var contact4 = '';
-  //   var contact5 = '';
-  //   var prefs = await SharedPreferences.getInstance();
-  //   String? getcontact1 = prefs.getString(_key1);
-  //   String? getcontact2 = prefs.getString(_key2);
-  //   String? getcontact3 = prefs.getString(_key3);
-  //   String? getcontact4 = prefs.getString(_key4);
-  //   String? getcontact5 = prefs.getString(_key5);
-  //   contact1 = getcontact1 ?? '';
-  //   contact2 = getcontact2 ?? '';
-  //   contact3 = getcontact3 ?? '';
-  //   contact4 = getcontact4 ?? '';
-  //   contact5 = getcontact5 ?? '';
-  //
-  //   debugPrint("$contact1  $contact2  $contact3  $contact4 $contact5");
-  // }
+  Widget _buildContactCard({
+    required int index,
+    required String label,
+    required TextEditingController controller,
+    bool isPrimary = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: AppColors.softShadow,
+        border: Border.all(
+          color: isPrimary ? AppColors.primaryLight.withOpacity(0.4) : Colors.grey.shade100,
+          width: isPrimary ? 1.5 : 1,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: isPrimary ? AppColors.primaryLight : Colors.grey.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  "$index",
+                  style: GoogleFonts.poppins(
+                    color: isPrimary ? Colors.white : Colors.grey.shade700,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: isPrimary ? AppColors.primary : AppColors.textDark,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: controller,
+            keyboardType: TextInputType.phone,
+            validator: (val) {
+              if (val != null && val.trim().isNotEmpty) {
+                if (!PhoneValidator.isValid(val)) {
+                  return 'Invalid format. E.g. 0412 345 678 or +61 412 345 678';
+                }
+              }
+              return null;
+            },
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textDark,
+            ),
+            decoration: InputDecoration(
+              isDense: true,
+              prefixIcon: const Icon(Icons.phone_rounded, color: AppColors.primaryLight, size: 20),
+              hintText: "Enter phone number (e.g. 0412 345 678)",
+              hintStyle: GoogleFonts.inter(color: Colors.grey.shade400, fontSize: 13),
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: Colors.grey.shade200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(color: Colors.grey.shade200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.primaryLight, width: 1.5),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
