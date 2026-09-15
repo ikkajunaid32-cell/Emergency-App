@@ -11,24 +11,34 @@ set "APK=C:\Users\HP\Desktop\EmergencyApp.apk"
 
 echo [1/4] Checking Android Emulator status...
 "%ADB%" devices | findstr "emulator-" >nul
-if %errorlevel% equ 0 (
-    echo [1/4] Emulator is already running!
-    goto install_app
-)
+if %errorlevel% equ 0 goto check_boot
 
 echo [1/4] Starting Android Emulator: EmergencyApp_x64...
 start "" "%EMULATOR%" -avd EmergencyApp_x64
 
+:check_boot
 echo [2/4] Waiting for emulator to connect...
 "%ADB%" wait-for-device
 
-echo [2/4] Waiting for Android system to boot...
-ping -n 12 127.0.0.1 >nul
+echo [2/4] Waiting for Android system to boot completely...
+:wait_boot
+for /f "tokens=*" %%a in ('"%ADB%" shell getprop sys.boot_completed 2^>nul') do set "BOOT=%%a"
+if not "%BOOT%"=="1" (
+    ping -n 3 127.0.0.1 >nul
+    goto wait_boot
+)
+echo [2/4] Android is fully booted!
 
-:install_app
+:wait_pm
+"%ADB%" shell pm path android >nul 2>&1
+if %errorlevel% neq 0 (
+    ping -n 3 127.0.0.1 >nul
+    goto wait_pm
+)
+
 echo.
 echo [3/4] Installing latest Emergency App APK...
-"%ADB%" install -r "%APK%"
+"%ADB%" install -r -d "%APK%"
 
 echo.
 echo [4/4] Launching Emergency App...
