@@ -27,8 +27,8 @@ class EmergencyContactsController extends GetxController {
     contact4 = getcontact4 ?? '';
     contact5 = getcontact5 ?? '';
 
-    return [contact1, contact2, contact3, contact4, contact5];
     debugPrint("$contact1  $contact2  $contact3  $contact4 $contact5");
+    return [contact1, contact2, contact3, contact4, contact5];
   }
 
   Future<void> setData(String contact1, String contact2, String contact3,

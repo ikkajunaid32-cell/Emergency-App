@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:public_emergency_app/Utils/phone_validator.dart';
@@ -157,28 +156,16 @@ class messageController extends GetxController {
     });
   }
 
-  Future<void> sendLocationViaSMS(String EmergencyType) async {
-    await getCurrentPosition().then((_currentAddress) async {
-      if (_currentAddress != null) {
-        // Get.snackbar("Location", _currentAddress!);
-        // final Uri smsLaunchUri = Uri(
-        //   scheme: 'sms',
-        //   path: '03177674726',
-        //   queryParameters: <String, String>{
-        //     'body': "HELP me! I am under the water \n http://www.google.com/maps/place/${_currentPosition!.latitude},${_currentPosition!.longitude}"
-        //   },
-        // );
-        // launchUrl(smsLaunchUri);
-        // Get.snackbar("Location",
-        //     "$_currentPosition.latitude, $_currentPosition.longitude ");
-        String message =
-            "HELP me! There is an $EmergencyType \n http://www.google.com/maps/place/${_currentPosition!.latitude},${_currentPosition!.longitude}}";
-        await emergencyContactsController
-            .loadData()
-            .then((emergencyContacts) => _sendSMS(message, emergencyContacts));
-      } else {}
-    });
-
-    // Get.snackbar("Location", "Location not found");
+  Future<void> sendLocationViaSMS(String emergencyType) async {
+    Position position = await getCurrentPosition();
+    String message =
+        "HELP me! There is an $emergencyType \n http://www.google.com/maps/place/${position.latitude},${position.longitude}";
+    if (_currentAddress != null && _currentAddress!.isNotEmpty) {
+      message =
+          "HELP me! There is an $emergencyType at $_currentAddress \n http://www.google.com/maps/place/${position.latitude},${position.longitude}";
+    }
+    List<String> emergencyContacts =
+        await emergencyContactsController.loadData();
+    _sendSMS(message, emergencyContacts);
   }
 }

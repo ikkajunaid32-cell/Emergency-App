@@ -28,12 +28,13 @@ class _ContactListScreenState extends State<ContactListScreen> {
 
   Future<void> _loadContacts() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
-      _contact1 = prefs.getString('contact1')!;
-      _contact2 = prefs.getString('contact2')!;
-      _contact3 = prefs.getString('contact3')!;
-      _contact4 = prefs.getString('contact4')!;
-      _contact5 = prefs.getString('contact5')!;
+      _contact1 = prefs.getString('contact1') ?? '';
+      _contact2 = prefs.getString('contact2') ?? '';
+      _contact3 = prefs.getString('contact3') ?? '';
+      _contact4 = prefs.getString('contact4') ?? '';
+      _contact5 = prefs.getString('contact5') ?? '';
     });
   }
 
@@ -94,7 +95,7 @@ class _ContactListScreenState extends State<ContactListScreen> {
             tileColor: Colors.red.shade200,
             style: ListTileStyle.drawer,
             title: const Text('Contact 1'),
-            subtitle: Text(_contact1 ?? ''),
+            subtitle: Text(_contact1.isEmpty ? 'Not set' : _contact1),
           ),
           const SizedBox(height: 10),
 
@@ -105,7 +106,7 @@ class _ContactListScreenState extends State<ContactListScreen> {
             tileColor: Colors.blueGrey.shade200,
             style: ListTileStyle.drawer,
             title: const Text('Contact 2'),
-            subtitle: Text(_contact2 ?? ''),
+            subtitle: Text(_contact2.isEmpty ? 'Not set' : _contact2),
           ),
           const SizedBox(height: 10),
 
@@ -116,7 +117,7 @@ class _ContactListScreenState extends State<ContactListScreen> {
             tileColor: Colors.red.shade200,
             style: ListTileStyle.drawer,
             title: const Text('Contact 3'),
-            subtitle: Text(_contact3?? ''),
+            subtitle: Text(_contact3.isEmpty ? 'Not set' : _contact3),
           ),
           const SizedBox(height: 10),
 
@@ -127,7 +128,7 @@ class _ContactListScreenState extends State<ContactListScreen> {
             tileColor: Colors.blueGrey.shade200,
             style: ListTileStyle.drawer,
             title: const Text('Contact 4'),
-            subtitle: Text(_contact4?? ''),
+            subtitle: Text(_contact4.isEmpty ? 'Not set' : _contact4),
           ),
           const SizedBox(height: 10),
 
@@ -138,7 +139,7 @@ class _ContactListScreenState extends State<ContactListScreen> {
             tileColor: Colors.red.shade200,
             style: ListTileStyle.drawer,
             title: const Text('Contact 5'),
-            subtitle: Text(_contact5?? ''),
+            subtitle: Text(_contact5.isEmpty ? 'Not set' : _contact5),
           ),
         ],
       ),
