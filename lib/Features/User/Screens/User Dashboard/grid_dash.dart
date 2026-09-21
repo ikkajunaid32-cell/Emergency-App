@@ -75,7 +75,7 @@ class GridDashboard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: item.gradient.colors.last.withOpacity(0.32),
+                    color: item.gradient.colors.last.withValues(alpha: 0.32),
                     blurRadius: 14,
                     offset: const Offset(0, 6),
                   ),
@@ -94,7 +94,7 @@ class GridDashboard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Image.asset(
@@ -108,7 +108,7 @@ class GridDashboard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
+                            color: Colors.white.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -135,7 +135,7 @@ class GridDashboard extends StatelessWidget {
                         Text(
                           item.subtitle,
                           style: GoogleFonts.inter(
-                            color: Colors.white.withOpacity(0.85),
+                            color: Colors.white.withValues(alpha: 0.85),
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -146,7 +146,7 @@ class GridDashboard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.18),
+                            color: Colors.black.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(

@@ -264,7 +264,7 @@ class _AddContactState extends State<add_contact> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: AppColors.softShadow,
         border: Border.all(
-          color: isPrimary ? AppColors.primaryLight.withOpacity(0.4) : Colors.grey.shade100,
+          color: isPrimary ? AppColors.primaryLight.withValues(alpha: 0.4) : Colors.grey.shade100,
           width: isPrimary ? 1.5 : 1,
         ),
       ),

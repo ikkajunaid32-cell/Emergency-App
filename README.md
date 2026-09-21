@@ -1,43 +1,65 @@
 # Emergency Response Mobile Application
 
-This is a cross-platform mobile application designed to provide assistance in emergencies. The app incorporates specialized features for different user groups such as firefighters, ambulance personnel, police officers, and general users. It leverages the power of Flutter, Firebase, and Google Maps API to deliver accurate and real-time information to both users and responders.
+<p align="center">
+  <img src="assets/logos/emergencyAppLogo.png" width="120" alt="Emergency App Logo" />
+</p>
 
-**_Mockup_**
-![Emergency_App_Demo (1)](https://user-images.githubusercontent.com/75989502/230830602-cddedb67-9e8c-4f86-aaf0-69132433487f.png)
+An intelligent, cross-platform emergency response mobile application built with **Flutter**, **Firebase**, **SQLite local fallback**, and **Google Maps API**. The application bridges citizens in distress with specialized emergency first responders (Police, Firefighters, Ambulances/Paramedics) in real-time with automated location broadcasts and live video assessment.
 
+---
 
+## 🚀 Key Features
 
-## Features
+- **🆘 Instant SOS Distress Alerts**: Broadcast real-time GPS location and emergency details to active responders and trusted emergency contacts via SMS.
+- **🛰️ Live Incident Mapping & Routing**: Integrated Google Maps navigation for responders with direct turn-by-turn route launching.
+- **📹 Live Video Streaming**: Real-time video feeds during active emergencies for situational awareness and remote assessment.
+- **👥 Role-Based Dispatch & Responder Consoles**: Dedicated interfaces for Citizens, Police, Firefighters, and Ambulances with duty availability toggles.
+- **🎨 Modern Design System**: Refreshed UI layout with cohesive typography (`GoogleFonts.poppins` & `GoogleFonts.inter`), rounded card surfaces, accessible touch targets, and fresh brand logo and Android launcher icons.
+- **💾 Offline SQLite Local Caching**: Resilient incident management and responder status synchronization even during network transitions.
 
-- Send distress messages with your location and emergency type, allowing responders to quickly assess and address the situation.
-- Use Google Maps API, location data, and mobile sensors to provide accurate and real-time information to both users and responders.
-- Live video stream emergencies to enable remote assessment and facilitate appropriate responses.
-- Share live locations with active responders to expedite response times and optimize emergency assistance delivery.
-- Call emergency numbers according to emergency type, and see nearby locations of hospitals, police stations, and more
-- Add emergency contacts to receive distress SMS messages.
-- Initiate an SOS request with the push of a button, which sends alerts to admins and begins live streaming for remote assessment.
-- View and manage all emergency cases from a responder dashboard, which shows assigned emergencies with the location of the emergency and live video feed
-- Web App for admin to see and assign emergencies
+---
 
+## 🛠️ Architecture & Tech Stack
 
-## Technologies Used
+- **Framework**: Flutter 3.27+ (Dart 3.6+)
+- **State Management & Navigation**: GetX
+- **Backend & Realtime**: Firebase Auth, Firebase Realtime Database, Cloud Firestore
+- **Local Persistence**: SQLite (`sqflite`), `shared_preferences`
+- **Location & Mapping**: `geolocator`, Google Maps API, `url_launcher`
+- **Live Video**: ZEGOCLOUD UIKit Prebuilt Live Streaming
+- **UI & Typography**: `google_fonts`, Material 3 design principles
 
-- Flutter
-- Firebase for real-time data synchronization and user authentication
-- Google Maps API for location data and maps visualization
-- GetX
+---
 
-## Development Timeline
+## 📦 Getting Started
 
-- March 2023: Project started
-- April 2023: Project completed
+### Prerequisites
+- Flutter SDK `>=3.3.0 <4.0.0`
+- Android Studio / Android SDK (API 34+)
 
-## Installation
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/ikkajunaid32-cell/Emergency-App.git
 
-- Clone the repository: git clone https://github.com/Atinity/public_emergency_app.git
-- Navigate to the project directory: cd public_emergency_app
-- Install the required packages: flutter pub get
-- Run the app on a connected device or emulator: flutter run
+# Enter project directory
+cd Emergency-App
 
+# Fetch dependencies
+flutter pub get
 
+# Run static analysis
+dart analyze
 
+# Run unit & widget tests
+flutter test
+
+# Run the app
+flutter run
+```
+
+### Prebuilt APK
+The compiled debug APK is available directly at `EmergencyApp.apk` or can be generated anytime using:
+```powershell
+flutter build apk --debug --android-skip-build-dependency-validation
+```

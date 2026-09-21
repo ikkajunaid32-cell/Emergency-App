@@ -61,7 +61,7 @@ class _PoliceOptionsState extends State<PoliceOptions> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Image.asset(
@@ -89,7 +89,7 @@ class _PoliceOptionsState extends State<PoliceOptions> {
                         Obx(() => Text(
                               "Emergency helpline for ${countryConfig.countryFlag} ${countryConfig.countryName}: ${countryConfig.policeNumber}",
                               style: GoogleFonts.inter(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                                 fontSize: 12,
                               ),
                             )),
@@ -207,7 +207,7 @@ class _PoliceOptionsState extends State<PoliceOptions> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: iconBg.withOpacity(0.3),
+                      color: iconBg.withValues(alpha: 0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -235,7 +235,7 @@ class _PoliceOptionsState extends State<PoliceOptions> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: iconBg.withOpacity(0.12),
+                            color: iconBg.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(

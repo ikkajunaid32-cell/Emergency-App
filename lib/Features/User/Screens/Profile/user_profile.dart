@@ -29,7 +29,7 @@ class _UserProfileState extends State<UserProfile> {
               ElevatedButton(
 
                 style: ElevatedButton.styleFrom(
-                  minimumSize: Size(200, 50),
+                  minimumSize: const Size(200, 50),
                   shape: RoundedRectangleBorder(
 
                     borderRadius: BorderRadius.circular(32.0),
@@ -53,7 +53,7 @@ class _UserProfileState extends State<UserProfile> {
                     foregroundColor: Colors.white,
                   ),
                   onPressed: () {
-                      Get.to(() => add_contact());
+                      Get.to(() => const add_contact());
                   },
                   child:const Text("Add Emergency Contacts")),
               const SizedBox(height: 20,),
@@ -68,7 +68,7 @@ class _UserProfileState extends State<UserProfile> {
                   ),
                   onPressed: () {
 
-                      Get.to(() => ContactListScreen());
+                      Get.to(() => const ContactListScreen());
                   },
                   child:const Text("Emergency Contacts")),
 

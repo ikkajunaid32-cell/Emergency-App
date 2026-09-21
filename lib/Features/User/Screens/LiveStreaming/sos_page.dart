@@ -59,9 +59,9 @@ class _LiveStreamUserState extends State<LiveStreamUser> {
                   ),
                   Container(
                     margin: const EdgeInsets.only(top: 8),
-                    child: Column(
+                    child: const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           "SOS",
                           style: TextStyle(

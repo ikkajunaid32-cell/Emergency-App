@@ -167,7 +167,7 @@ class _UserDashboardState extends State<UserDashboard> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.12),
+                                color: Colors.white.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Image.asset(
@@ -213,7 +213,7 @@ class _UserDashboardState extends State<UserDashboard> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
+                                color: Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(color: Colors.white24, width: 1),
                               ),
@@ -246,9 +246,9 @@ class _UserDashboardState extends State<UserDashboard> {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: AppColors.emergencyRed.withOpacity(0.2),
+                          color: AppColors.emergencyRed.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.emergencyRed.withOpacity(0.4)),
+                          border: Border.all(color: AppColors.emergencyRed.withValues(alpha: 0.4)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -299,7 +299,7 @@ class _UserDashboardState extends State<UserDashboard> {
                             Container(
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
+                                color: Colors.white.withValues(alpha: 0.25),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -326,7 +326,7 @@ class _UserDashboardState extends State<UserDashboard> {
                                   Text(
                                     "Broadcast your live GPS location & stream video instantly to responders",
                                     style: GoogleFonts.inter(
-                                      color: Colors.white.withOpacity(0.92),
+                                      color: Colors.white.withValues(alpha: 0.92),
                                       fontSize: 12,
                                       height: 1.3,
                                     ),
