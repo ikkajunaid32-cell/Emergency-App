@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:public_emergency_app/Common%20Widgets/constants.dart';
 import 'package:public_emergency_app/Utils/emergency_country_config.dart';
+import 'package:public_emergency_app/Utils/phone_caller.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../Controllers/message_sending.dart';
 
@@ -107,18 +107,7 @@ class AmbulanceOptions extends StatelessWidget {
                 title: "Call Paramedics ($number)",
                 subtitle: "Direct line for life-threatening medical emergencies",
                 badgeText: "24/7 Rapid",
-                onTap: () async {
-                  if (await Permission.phone.request().isGranted) {
-                    final uri = Uri.parse("tel:$number");
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri);
-                    } else {
-                      Get.snackbar("Error", "Could not call $number");
-                    }
-                  } else {
-                    Get.snackbar("Permission Denied", "Phone call permission is required");
-                  }
-                },
+                onTap: () => PhoneCaller.call(number),
               );
             }),
 

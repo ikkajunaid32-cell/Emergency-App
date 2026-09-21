@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:public_emergency_app/Common%20Widgets/constants.dart';
 import 'package:public_emergency_app/Utils/emergency_country_config.dart';
+import 'package:public_emergency_app/Utils/phone_caller.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../Controllers/message_sending.dart';
 
@@ -25,7 +25,7 @@ class _PoliceOptionsState extends State<PoliceOptions> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
+        backgroundColor: const Color(0xff2563EB),
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
@@ -33,7 +33,7 @@ class _PoliceOptionsState extends State<PoliceOptions> {
           onPressed: () => Get.back(),
         ),
         title: Text(
-          "Police Emergency",
+          "Police Department",
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w700,
             fontSize: 20,
@@ -41,20 +41,22 @@ class _PoliceOptionsState extends State<PoliceOptions> {
           ),
         ),
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Banner
+            // Country Info Banner
             Container(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                gradient: AppColors.policeGradient,
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: AppColors.glowShadow(const Color(0xff1D4ED8)),
+                color: const Color(0xff2563EB).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xff2563EB).withValues(alpha: 0.2)),
               ),
               child: Row(
                 children: [
@@ -112,18 +114,7 @@ class _PoliceOptionsState extends State<PoliceOptions> {
                 title: "Call Police Helpline ($number)",
                 subtitle: "Instantly dial official police emergency line",
                 badgeText: "Priority 24/7",
-                onTap: () async {
-                  if (await Permission.phone.request().isGranted) {
-                    final uri = Uri.parse("tel:$number");
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(uri);
-                    } else {
-                      Get.snackbar("Error", "Could not initiate call to $number");
-                    }
-                  } else {
-                    Get.snackbar("Permission Denied", "Phone call permission is required");
-                  }
-                },
+                onTap: () => PhoneCaller.call(number),
               );
             }),
 
