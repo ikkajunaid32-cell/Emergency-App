@@ -52,7 +52,12 @@ jobs:
         run: flutter pub get
 
       - name: Build iOS Application
-        run: flutter build ios --release --no-codesign
+        run: |
+          flutter build ios --release --no-codesign 2>&1 | tee ios_build.log || {
+            echo "::error::Flutter build iOS failed! Inspecting log tail:"
+            tail -n 120 ios_build.log
+            exit 1
+          }
 
       - name: Package IPA for Sideloading / Testing
         run: |
@@ -67,3 +72,10 @@ jobs:
         with:
           name: EmergencyApp-iOS.ipa
           path: build/ios/iphoneos/EmergencyApp.ipa
+
+      - name: Upload Build Log on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-log
+          path: ios_build.log
