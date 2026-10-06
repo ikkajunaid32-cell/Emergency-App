@@ -66,17 +66,21 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<!-- Emergency App Permissions -->
+	<!-- Emergency & Task App Permissions -->
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app requires your location to send emergency responders to your exact coordinates.</string>
+	<string>This app requires your location to submit task location proofs and verify emergency check-ins.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>This app requires location access to keep emergency responders updated during an incident.</string>
+	<string>This app requires location access for location-based task activities.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>This app requires continuous location tracking to assist you during an active emergency.</string>
+	<string>This app requires continuous location tracking for task verification and emergency assistance.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>This app requires camera access for live video streaming with emergency responders.</string>
+	<string>This app requires camera access to capture photo and video proofs for task completions.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>This app requires microphone access for audio during live streaming and emergency communications.</string>
+	<string>This app requires microphone access for recording audio with video proofs.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app requires photo library access to upload photos and videos for task submissions.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app requires permission to save photos taken for task submissions.</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>tel</string>

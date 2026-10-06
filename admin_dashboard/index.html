@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Tasks | Enterprise Admin Command Center</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts Poppins & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              500: '#ff521b',
+              600: '#ea580c',
+              700: '#c2410c',
+            },
+            slate: {
+              850: '#151f32',
+              900: '#0f172a',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Poppins', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    h1, h2, h3, .font-display { font-family: 'Poppins', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden">
+
+  <!-- ============================================================== -->
+  <!-- SIDEBAR NAVIGATION -->
+  <!-- ============================================================== -->
+  <aside class="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 z-20">
+    <!-- Brand Header -->
+    <div class="h-16 flex items-center px-6 border-b border-slate-800 gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-white shadow-lg shadow-orange-500/30">
+        <i class="fa-solid fa-compass text-lg"></i>
+      </div>
+      <div>
+        <h1 class="font-display font-bold text-base leading-tight">Daily Tasks</h1>
+        <p class="text-[10px] uppercase font-bold tracking-wider text-orange-400">Admin Console</p>
+      </div>
+    </div>
+
+    <!-- Nav Links -->
+    <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto custom-scrollbar">
+      <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all bg-brand-500 text-white shadow-md shadow-brand-500/20">
+        <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+        <span>Dashboard Overview</span>
+      </a>
+
+      <a href="#" onclick="switchTab('tasks')" id="nav-tasks" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+        <i class="fa-solid fa-list-check w-5 text-center"></i>
+        <span>Task Studio</span>
+        <span id="badge-active-tasks" class="ml-auto text-xs bg-slate-800 text-slate-300 font-bold px-2 py-0.5 rounded-full border border-slate-700">0</span>
+      </a>
+
+      <a href="#" onclick="switchTab('submissions')" id="nav-submissions" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+        <i class="fa-solid fa-inbox w-5 text-center"></i>
+        <span>Submissions Review</span>
+        <span id="badge-pending-subs" class="ml-auto text-xs bg-amber-500 text-slate-950 font-extrabold px-2 py-0.5 rounded-full animate-pulse">0</span>
+      </a>
+
+      <a href="#" onclick="switchTab('rewards')" id="nav-rewards" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+        <i class="fa-solid fa-gift w-5 text-center"></i>
+        <span>Rewards & Points</span>
+      </a>
+
+      <a href="#" onclick="switchTab('users')" id="nav-users" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+        <i class="fa-solid fa-users w-5 text-center"></i>
+        <span>User Directory</span>
+      </a>
+
+      <a href="#" onclick="switchTab('notifications')" id="nav-notifications" class="nav-item flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+        <i class="fa-solid fa-bell w-5 text-center"></i>
+        <span>Push Notifications</span>
+      </a>
+    </nav>
+
+    <!-- Admin User Badge -->
+    <div class="p-4 border-t border-slate-800 bg-slate-850 flex items-center gap-3">
+      <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="w-9 h-9 rounded-full object-cover ring-2 ring-orange-500" alt="Avatar">
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-white truncate">Administrator</p>
+        <p class="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Live Connected
+        </p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================================== -->
+  <!-- MAIN CONTENT AREA -->
+  <!-- ============================================================== -->
+  <main class="flex-1 flex flex-col min-w-0 overflow-y-auto custom-scrollbar">
+
+    <!-- Top Navigation Header -->
+    <header class="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-10">
+      <div class="flex items-center gap-3">
+        <h2 id="top-header-title" class="font-display font-bold text-xl text-slate-900">Dashboard Overview</h2>
+        <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg border border-slate-200 font-semibold">Firebase Cloud Sync Active</span>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <button onclick="openCreateTaskModal()" class="bg-brand-500 hover:bg-brand-600 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-md shadow-brand-500/25 flex items-center gap-2 transition-all">
+          <i class="fa-solid fa-plus"></i> Create Daily Task
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT SECTIONS -->
+    <div class="p-8 space-y-8">
+
+      <!-- ============================================================== -->
+      <!-- TAB 1: DASHBOARD OVERVIEW -->
+      <!-- ============================================================== -->
+      <section id="section-dashboard" class="space-y-8">
+        <!-- 4 KPI Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <!-- Active Tasks -->
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Active Daily Tasks</p>
+              <h3 id="stat-active-tasks" class="font-display font-extrabold text-3xl text-slate-900 mt-1">0</h3>
+              <p class="text-xs text-emerald-600 font-semibold mt-1 flex items-center gap-1">
+                <i class="fa-solid fa-arrow-trend-up"></i> Live on Explore
+              </p>
+            </div>
+            <div class="w-13 h-13 p-3.5 rounded-2xl bg-orange-50 text-brand-500 text-xl flex items-center justify-center">
+              <i class="fa-solid fa-list-check"></i>
+            </div>
+          </div>
+
+          <!-- Pending Review Submissions -->
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pending Review</p>
+              <h3 id="stat-pending-subs" class="font-display font-extrabold text-3xl text-amber-500 mt-1">0</h3>
+              <p class="text-xs text-amber-600 font-semibold mt-1 flex items-center gap-1">
+                <i class="fa-solid fa-clock"></i> Requires Admin Action
+              </p>
+            </div>
+            <div class="w-13 h-13 p-3.5 rounded-2xl bg-amber-50 text-amber-500 text-xl flex items-center justify-center">
+              <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+          </div>
+
+          <!-- Completed Tasks -->
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Completed & Approved</p>
+              <h3 id="stat-completed-tasks" class="font-display font-extrabold text-3xl text-emerald-600 mt-1">0</h3>
+              <p class="text-xs text-emerald-600 font-semibold mt-1 flex items-center gap-1">
+                <i class="fa-solid fa-check"></i> Submissions verified
+              </p>
+            </div>
+            <div class="w-13 h-13 p-3.5 rounded-2xl bg-emerald-50 text-emerald-600 text-xl flex items-center justify-center">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+          </div>
+
+          <!-- Total Points Awarded -->
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Points Awarded</p>
+              <h3 id="stat-points-awarded" class="font-display font-extrabold text-3xl text-purple-600 mt-1">0</h3>
+              <p class="text-xs text-purple-600 font-semibold mt-1 flex items-center gap-1">
+                <i class="fa-solid fa-coins"></i> Distributed to users
+              </p>
+            </div>
+            <div class="w-13 h-13 p-3.5 rounded-2xl bg-purple-50 text-purple-600 text-xl flex items-center justify-center">
+              <i class="fa-solid fa-star"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Submissions Awaiting Approval Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+            <div>
+              <h3 class="font-display font-bold text-lg text-slate-900">Incoming Evidence Submissions</h3>
+              <p class="text-xs text-slate-500">Citizen activities waiting for inspection and point approval</p>
+            </div>
+            <button onclick="switchTab('submissions')" class="text-xs font-bold text-brand-500 hover:text-brand-600">View All In Queue &rarr;</button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-slate-400 text-xs font-bold uppercase border-b border-slate-100">
+                <tr>
+                  <th class="py-3.5 px-6">Task Title</th>
+                  <th class="py-3.5 px-6">Submitted By</th>
+                  <th class="py-3.5 px-6">Reward</th>
+                  <th class="py-3.5 px-6">Evidence Included</th>
+                  <th class="py-3.5 px-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-recent-subs-tbody" class="divide-y divide-slate-100">
+                <!-- Injected via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- TAB 2: TASK STUDIO -->
+      <!-- ============================================================== -->
+      <section id="section-tasks" class="hidden space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-display font-bold text-xl text-slate-900">Task Studio</h3>
+            <p class="text-xs text-slate-500">Create, edit, schedule, and assign daily and recurring tasks</p>
+          </div>
+          <button onclick="openCreateTaskModal()" class="bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> New Daily Task
+          </button>
+        </div>
+
+        <div id="tasks-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <!-- Injected via JavaScript -->
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- TAB 3: SUBMISSIONS REVIEW QUEUE -->
+      <!-- ============================================================== -->
+      <section id="section-submissions" class="hidden space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-display font-bold text-xl text-slate-900">Evidence Review Queue</h3>
+            <p class="text-xs text-slate-500">Review photos, videos, files and GPS pins. Approve to award points or reject with reason.</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="filterSubmissions('all')" class="sub-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white">All</button>
+            <button onclick="filterSubmissions('pending')" class="sub-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Pending</button>
+            <button onclick="filterSubmissions('approved')" class="sub-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Approved</button>
+            <button onclick="filterSubmissions('rejected')" class="sub-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50">Rejected</button>
+          </div>
+        </div>
+
+        <div id="submissions-list" class="space-y-4">
+          <!-- Injected via JavaScript -->
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- TAB 4: REWARDS & POINTS -->
+      <!-- ============================================================== -->
+      <section id="section-rewards" class="hidden space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-display font-bold text-xl text-slate-900">Rewards Store & Catalog</h3>
+            <p class="text-xs text-slate-500">Manage redeemable vouchers, merchandise, and point claim requests</p>
+          </div>
+          <button onclick="openCreateRewardModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> Add New Reward
+          </button>
+        </div>
+
+        <div id="rewards-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <!-- Injected via JavaScript -->
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- TAB 5: USER DIRECTORY -->
+      <!-- ============================================================== -->
+      <section id="section-users" class="hidden space-y-6">
+        <div>
+          <h3 class="font-display font-bold text-xl text-slate-900">Registered Users</h3>
+          <p class="text-xs text-slate-500">Manage user accounts, view point balances and completed task histories</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-400 text-xs font-bold uppercase border-b border-slate-100">
+              <tr>
+                <th class="py-3.5 px-6">Citizen</th>
+                <th class="py-3.5 px-6">Mobile Phone</th>
+                <th class="py-3.5 px-6">Role</th>
+                <th class="py-3.5 px-6">Points Wallet</th>
+                <th class="py-3.5 px-6">Joined Date</th>
+                <th class="py-3.5 px-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-tbody" class="divide-y divide-slate-100">
+              <!-- Injected via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- TAB 6: NOTIFICATIONS -->
+      <!-- ============================================================== -->
+      <section id="section-notifications" class="hidden space-y-6">
+        <div>
+          <h3 class="font-display font-bold text-xl text-slate-900">Push Notification Broadcast Center</h3>
+          <p class="text-xs text-slate-500">Dispatch push alerts to Android & iOS mobile devices via Firebase Cloud Messaging</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm max-w-2xl space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Notification Title</label>
+            <input id="notif-title" type="text" placeholder="e.g. New 250 PTS Mission: Park Cleanup Live!" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Message Body</label>
+            <textarea id="notif-body" rows="3" placeholder="Complete today's task before 8:00 PM to earn points..." class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Target Audience</label>
+            <select id="notif-target" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+              <option value="all">All Registered Mobile Users</option>
+              <option value="active">Active Task Participants</option>
+              <option value="inbox">Users with Pending Submissions</option>
+            </select>
+          </div>
+          <button onclick="sendBroadcastNotification()" class="bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-md flex items-center gap-2 transition-all">
+            <i class="fa-solid fa-paper-plane"></i> Send Push Notification
+          </button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: CREATE / SCHEDULE TASK -->
+  <!-- ============================================================== -->
+  <div id="modal-create-task" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar p-6 space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-display font-bold text-lg text-slate-900">Publish New Daily Task</h3>
+        <button onclick="closeCreateTaskModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <form id="form-create-task" onsubmit="handleCreateTask(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Task Title *</label>
+          <input id="task-title" required type="text" placeholder="e.g. Morning 5,000 Steps Walk" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Category</label>
+            <select id="task-category" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+              <option value="Community">Community</option>
+              <option value="Fitness & Health">Fitness & Health</option>
+              <option value="Eco & Green">Eco & Green</option>
+              <option value="Creative">Creative</option>
+              <option value="Learning">Learning</option>
+              <option value="Daily Habit">Daily Habit</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Points Bounty *</label>
+            <input id="task-points" required type="number" value="150" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Explore Card Short Description *</label>
+          <input id="task-desc" required type="text" placeholder="Teaser summary displayed on the card..." class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Detailed Instructions for User *</label>
+          <textarea id="task-instructions" required rows="3" placeholder="Step-by-step instructions for the participant..." class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Card Hero Banner Image URL</label>
+          <input id="task-image" type="url" value="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Expiration / Deadline</label>
+            <select id="task-deadline" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+              <option value="8">8 Hours</option>
+              <option value="12">12 Hours</option>
+              <option value="24" selected>24 Hours (Daily)</option>
+              <option value="48">48 Hours</option>
+              <option value="168">7 Days (Weekly)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Recurrence Schedule</label>
+            <select id="task-recurrence" class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+              <option value="none">One-Time Only</option>
+              <option value="daily">Daily Recurring</option>
+              <option value="weekly">Weekly Recurring</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Required Submission Proofs Checkboxes -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Required Proof Types from User</label>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <label class="flex items-center gap-2 text-slate-700"><input type="checkbox" id="req-text" checked class="rounded text-brand-500"> Written Answer / Notes</label>
+            <label class="flex items-center gap-2 text-slate-700"><input type="checkbox" id="req-photo" checked class="rounded text-brand-500"> Photo Proof Capture</label>
+            <label class="flex items-center gap-2 text-slate-700"><input type="checkbox" id="req-video" class="rounded text-brand-500"> Video Clip Proof</label>
+            <label class="flex items-center gap-2 text-slate-700"><input type="checkbox" id="req-file" class="rounded text-brand-500"> Document / File Upload</label>
+            <label class="flex items-center gap-2 text-slate-700"><input type="checkbox" id="req-location" class="rounded text-brand-500"> GPS Location Verification</label>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeCreateTaskModal()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100">Cancel</button>
+          <button type="submit" class="bg-brand-500 hover:bg-brand-600 text-white font-bold text-sm px-6 py-2.5 rounded-xl shadow-md">Publish Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: EVIDENCE INSPECTION & APPROVAL -->
+  <!-- ============================================================== -->
+  <div id="modal-evidence" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar p-6 space-y-5 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h3 id="evidence-modal-title" class="font-display font-bold text-lg text-slate-900">Review Evidence</h3>
+          <p id="evidence-modal-user" class="text-xs text-slate-500"></p>
+        </div>
+        <button onclick="closeEvidenceModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Text Proof -->
+        <div id="evidence-text-section" class="hidden">
+          <p class="text-xs font-bold uppercase text-slate-400 mb-1">User's Notes / Response</p>
+          <div id="evidence-text" class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800"></div>
+        </div>
+
+        <!-- Photo Proof -->
+        <div id="evidence-photo-section" class="hidden">
+          <p class="text-xs font-bold uppercase text-slate-400 mb-1">Uploaded Photos</p>
+          <div id="evidence-photos" class="grid grid-cols-2 gap-3"></div>
+        </div>
+
+        <!-- GPS Location Proof -->
+        <div id="evidence-gps-section" class="hidden p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-sm flex items-center gap-3">
+          <i class="fa-solid fa-location-dot text-emerald-600 text-xl"></i>
+          <div>
+            <p class="font-bold text-xs uppercase text-emerald-900">GPS Location Verified</p>
+            <p id="evidence-gps-address" class="text-xs text-emerald-700"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+        <button id="btn-modal-reject" onclick="triggerRejectCurrentSub()" class="border border-red-200 text-red-600 hover:bg-red-50 text-sm font-bold px-4 py-2.5 rounded-xl transition-all">
+          Reject with Reason
+        </button>
+        <button id="btn-modal-approve" onclick="triggerApproveCurrentSub()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-md transition-all">
+          Approve & Award Points
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
